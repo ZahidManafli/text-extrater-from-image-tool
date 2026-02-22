@@ -6,7 +6,7 @@ import FormatSelector from './components/FormatSelector'
 import ResultsDisplay from './components/ResultsDisplay'
 import { performOCR } from './utils/ocr'
 import { detectTable } from './utils/tableDetector'
-import { parseText } from './utils/textParser'
+import { parseText, extractTextExcludingTable } from './utils/textParser'
 import { extractTable } from './utils/tableExtractor'
 import { generateExcel, generateCSV } from './utils/csvGenerator'
 import { generateJSON } from './utils/jsonGenerator'
@@ -76,6 +76,15 @@ function App() {
       } else if (contentType === 'table') {
         const tableData = extractTable(ocrResult)
         setExtractedData(tableData)
+      } else if (contentType === 'both') {
+        // Extract both text and table
+        // For text, try to exclude the table portion
+        const tableData = extractTable(ocrResult)
+        const textData = extractTextExcludingTable(ocrResult, tableData)
+        setExtractedData({
+          text: textData,
+          table: tableData
+        })
       }
     } catch (err) {
       console.error('Extraction Error:', err)
@@ -91,6 +100,23 @@ function App() {
       if (format === 'excel') {
         if (contentType === 'table') {
           generateExcel(extractedData, 'extracted_table')
+        } else if (contentType === 'both') {
+          // For both, prioritize table in Excel format
+          if (extractedData.table && extractedData.table.headers.length > 0) {
+            generateExcel(extractedData.table, 'extracted_table')
+          } else {
+            // Fallback to text format
+            const csvData = {
+              headers: ['Text', 'Emails', 'Phones', 'URLs'],
+              rows: [[
+                extractedData.text?.text || '',
+                (extractedData.text?.emails || []).join('; '),
+                (extractedData.text?.phones || []).join('; '),
+                (extractedData.text?.urls || []).join('; ')
+              ]]
+            }
+            generateCSV(csvData, 'extracted_text')
+          }
         } else {
           // For text, create a simple CSV
           const csvData = {

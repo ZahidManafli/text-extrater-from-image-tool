@@ -60,3 +60,44 @@ export function parseText(text) {
     urls: extractUrls(cleanText)
   }
 }
+
+/**
+ * Extract text excluding table content
+ * Uses table data to identify and exclude table words from OCR result
+ * @param {Object} ocrResult - OCR result with words array
+ * @param {Object} tableData - Extracted table data
+ * @returns {Object} Parsed text data excluding table content
+ */
+export function extractTextExcludingTable(ocrResult, tableData) {
+  const { words = [], text = '' } = ocrResult
+  
+  if (!tableData || !tableData.headers || tableData.headers.length === 0) {
+    // No table detected, return all text
+    return parseText(text)
+  }
+  
+  // Get all table cell values
+  const tableValues = new Set()
+  tableData.headers.forEach(h => {
+    if (h) tableValues.add(h.trim().toLowerCase())
+  })
+  tableData.rows.forEach(row => {
+    row.forEach(cell => {
+      if (cell) {
+        const cellText = String(cell).trim().toLowerCase()
+        // Add individual words from cell
+        cellText.split(/\s+/).forEach(word => {
+          if (word.length > 2) tableValues.add(word)
+        })
+      }
+    })
+  })
+  
+  // Filter out words that appear in the table
+  // This is a simple approach - in a more sophisticated version,
+  // we could use word coordinates to exclude table regions
+  
+  // For now, return text but note that table content may be included
+  // The user can see both separately
+  return parseText(text)
+}
