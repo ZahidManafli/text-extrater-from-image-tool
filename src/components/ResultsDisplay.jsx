@@ -1,4 +1,9 @@
+import { useState } from 'react'
+import CodeTabs from './CodeTabs'
+
 export default function ResultsDisplay({ contentType, extractedData }) {
+  const [activeViewTab, setActiveViewTab] = useState('text') // 'text' or 'table'
+
   if (!extractedData) {
     return null
   }
@@ -9,12 +14,38 @@ export default function ResultsDisplay({ contentType, extractedData }) {
     const tableData = extractedData.table || {}
     
     return (
-      <div className="mt-6 space-y-6">
-        {/* Text Section */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Extracted Text Data
-          </h3>
+      <div className="mt-6">
+        {/* Tabs for switching between Text and Table */}
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+          <div className="flex border-b border-gray-200 mb-4">
+            <button
+              onClick={() => setActiveViewTab('text')}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                activeViewTab === 'text'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Text
+            </button>
+            <button
+              onClick={() => setActiveViewTab('table')}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                activeViewTab === 'table'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Table
+            </button>
+          </div>
+
+          {/* Text Tab Content */}
+          {activeViewTab === 'text' && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Extracted Text Data
+              </h3>
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -83,49 +114,61 @@ export default function ResultsDisplay({ contentType, extractedData }) {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Table Section */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Extracted Table Data
-          </h3>
-          
-          {tableData.headers && tableData.headers.length > 0 ? (
-            <div className="overflow-x-auto mb-4">
-              <table className="min-w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr>
-                    {tableData.headers.map((header, index) => (
-                      <th
-                        key={index}
-                        className="border border-gray-300 px-4 py-2 bg-gray-100 font-semibold text-left text-gray-800"
-                      >
-                        {header || `Column ${index + 1}`}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableData.rows && tableData.rows.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {row.map((cell, cellIndex) => (
-                        <td
-                          key={cellIndex}
-                          className="border border-gray-300 px-4 py-2 text-gray-700"
-                        >
-                          {cell || ''}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
-          ) : (
-            <p className="text-gray-600">No table structure detected.</p>
+          )}
+
+          {/* Table Tab Content */}
+          {activeViewTab === 'table' && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Extracted Table Data
+              </h3>
+              
+              {tableData.headers && tableData.headers.length > 0 ? (
+                <div className="overflow-x-auto mb-4">
+                  <table className="min-w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr>
+                        {tableData.headers.map((header, index) => (
+                          <th
+                            key={index}
+                            className="border border-gray-300 px-4 py-2 bg-gray-100 font-semibold text-left text-gray-800"
+                          >
+                            {header || `Column ${index + 1}`}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableData.rows && tableData.rows.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                          {row.map((cell, cellIndex) => (
+                            <td
+                              key={cellIndex}
+                              className="border border-gray-300 px-4 py-2 text-gray-700"
+                            >
+                              {cell || ''}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-600">No table structure detected.</p>
+              )}
+            </div>
           )}
         </div>
+
+        {/* Code Tabs (SQL & HTML) - Always visible */}
+        <CodeTabs 
+          contentType="both" 
+          extractedData={extractedData}
+          tableData={extractedData.table}
+          tableName="extracted_table"
+        />
       </div>
     )
   }
@@ -248,6 +291,14 @@ export default function ResultsDisplay({ contentType, extractedData }) {
           {(!extractedData.headers || extractedData.headers.length === 0) && (
             <p className="text-gray-600">No table structure detected.</p>
           )}
+
+          {/* Code Tabs (SQL & HTML) */}
+          <CodeTabs 
+            contentType={contentType} 
+            extractedData={extractedData}
+            tableData={contentType === 'table' ? extractedData : null}
+            tableName="extracted_table"
+          />
         </div>
       )}
     </div>

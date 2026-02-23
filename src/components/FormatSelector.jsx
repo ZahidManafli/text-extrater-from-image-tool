@@ -2,7 +2,7 @@ export default function FormatSelector({ format, onFormatChange, onDownload }) {
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        Download Format
+        Download Table as
       </h3>
       
       <div className="flex gap-4 mb-4">
